@@ -1,80 +1,62 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Numerics;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class BOBcontroller : MonoBehaviour
 {
-    [SerializeField]
-    float jumpforce = 1200;
-    [SerializeField]
-    float speed = 5;
-    [SerializeField]
-    LayerMask groundlayer;
-    bool hasrelsedjump = true;
-    Rigidbody2D rbody;
-    [SerializeField]
-    float groundradius = 0.2f;
+  [SerializeField]
+  float speed = 5;
+  [SerializeField]
+  float jumpForce = 3000;
+  [SerializeField]
+  LayerMask groundLayer;
+  [SerializeField]
+  float groundRadius = 0.2f;
 
-    Vector2 footposition;
-    Vector2 bottomcolidersize = new Vector2.zero;
+  Rigidbody2D rBody;
+  bool hasReleasedJumpButton = true;
 
+  void Awake()
+  {
+    rBody = GetComponent<Rigidbody2D>();
+  }
+  void Update()
+  {
 
-    void Awake()
+    float moveX = Input.GetAxisRaw("Horizontal");
+
+    Vector2 movement = new Vector2(moveX, 0) * speed * Time.deltaTime;
+
+    transform.Translate(movement);
+
+    bool isGrounded = Physics2D.OverlapBox(GetFootPosition(), GetFootSize(), 0, groundLayer);
+
+    if (Input.GetAxisRaw("Jump") > 0 && hasReleasedJumpButton == true && isGrounded)
     {
-        rbody = GetComponent<Rigidbody2D>();
-        bottomcolidersize
+      rBody.AddForce(Vector2.up * jumpForce);
+      hasReleasedJumpButton = false;
     }
 
-
-
-    // Update is called once per frame
-    void Update()
+    if (Input.GetAxisRaw("Jump") == 0)
     {
-
-        float moveX = Input.GetAxisRaw("Horizontal");
-
-        Vector2 movement = new Vector2(moveX, 0);
-        movement = movement.normalized * speed * Time.deltaTime;
-
-        transform.Translate(movement);
-
-        footposition = transform.position;
-
-        // bool isGrounded = Physics2D.OverlapCircle(getfoot(), groundradius, groundlayer);
-        bool isGrounded = Physics2D.OverlapBox(getfoot(),getfootzise(),groundlayer);
-
-        if (Input.GetAxisRaw("Jump") > 0 && hasrelsedjump == true && isGrounded)
-        {
-            rbody.AddForce(Vector2.up * jumpforce);
-            hasrelsedjump = false;
-        }
-
-        if (Input.GetAxisRaw("Jump") == 0)
-        {
-            hasrelsedjump = true;
-        }
+      hasReleasedJumpButton = true;
     }
+  }
 
+  private Vector2 GetFootPosition()
+  {
+    float height = GetComponent<Collider2D>().bounds.size.y;
+    return transform.position + Vector3.down * height / 2;
+  }
 
-private Vector2 getfootzise()
-{
-return new Vector2(GetComponent<Rigidbody2D>().Bounds.size
-}
+  private Vector2 GetFootSize()
+  {
+    return new Vector2(GetComponent<Collider2D>().bounds.size.x * 0.9f, 0.1f);
+  }
 
-    private Vector2 getfoot()
-    {
-       float hight = GetComponent <Collider2D>().bounds.size.y;
-        return transform.position + Vector3.down * hight / 2;
-    }
-    void OnDrawGizmos()
-    {
-            Gizmos.DrawWireCube(bottomcolidersize);
-    }
+  private void OnDrawGizmosSelected()
+  {
+    Gizmos.DrawWireCube(GetFootPosition(), GetFootSize());
 
-
-
-
-
+  }
 }
